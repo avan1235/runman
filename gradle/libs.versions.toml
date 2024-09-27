@@ -1,8 +1,10 @@
 [versions]
 
+javasoundAac = "0.9.8"
+javasoundResloader = "0.1.3"
 kotlin = "2.0.20"
 compose = "1.7.0-beta02"
-agp = "8.6.0-alpha07"
+agp = "8.5.2"
 androidx-activityCompose = "1.9.2"
 androidx-uiTest = "1.7.2"
 kermit = "2.0.4"
@@ -22,6 +24,8 @@ composeIcons = "1.1.1"
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-uitest-testManifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "androidx-uiTest" }
 androidx-uitest-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "androidx-uiTest" }
+javasound-aac = { module = "com.tianscar.javasound:javasound-aac", version.ref = "javasoundAac" }
+javasound-resloader = { module = "com.tianscar.javasound:javasound-resloader", version.ref = "javasoundResloader" }
 kermit = { module = "co.touchlab:kermit", version.ref = "kermit" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }

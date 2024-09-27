@@ -20,4 +20,6 @@ fun main() = application {
 
 @Preview
 @Composable
-fun AppPreview() { App() }
+fun AppPreview() {
+    App()
+}
