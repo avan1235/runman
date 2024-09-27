@@ -76,7 +76,7 @@ internal fun App() = AppTheme {
                 CircularProgressIndicator()
             }
 
-            is Playing, is Canceled -> ElevatedButton(
+            is Playing, is Stopped -> ElevatedButton(
                 modifier = Modifier
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .widthIn(min = 200.dp),
@@ -89,7 +89,7 @@ internal fun App() = AppTheme {
                             Text("Stop")
                         }
 
-                        is Starting, Canceled -> {
+                        is Starting, Stopped -> {
                             Icon(FeatherIcons.Play, contentDescription = "Play")
                             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                             Text("Play")
@@ -103,27 +103,27 @@ internal fun App() = AppTheme {
 
 internal sealed interface PlayingState {
     fun onStartPlaying(): PlayingState
-    fun onCancelPlaying()
+    fun onStopPlaying()
     class Starting(private val job: Job) : PlayingState {
         override fun onStartPlaying() = Playing(job)
-        override fun onCancelPlaying() = job.cancel()
+        override fun onStopPlaying() = job.cancel()
     }
 
     class Playing(private val job: Job) : PlayingState {
-        override fun onStartPlaying() = Canceled
-        override fun onCancelPlaying() = job.cancel()
+        override fun onStartPlaying() = Stopped
+        override fun onStopPlaying() = job.cancel()
     }
 
-    data object Canceled : PlayingState {
-        override fun onStartPlaying() = Canceled
-        override fun onCancelPlaying() {}
+    data object Stopped : PlayingState {
+        override fun onStartPlaying() = Stopped
+        override fun onStopPlaying() {}
     }
 }
 
 internal val PlayingState.isPlaying: Boolean
     get() = when (this) {
         is Playing -> true
-        is Starting, Canceled -> false
+        is Starting, Stopped -> false
     }
 
 internal class RadioSource(
@@ -143,7 +143,7 @@ internal class MyViewModel : ViewModel() {
     private val _source = MutableStateFlow(RadioSource.KNOWN.first())
     val source: StateFlow<RadioSource> = _source.asStateFlow()
 
-    private var _playingState = MutableStateFlow<PlayingState>(Canceled)
+    private var _playingState = MutableStateFlow<PlayingState>(Stopped)
     val playingState: StateFlow<PlayingState> = _playingState.asStateFlow()
 
     fun onSourceSelected(source: RadioSource) {
@@ -159,23 +159,23 @@ internal class MyViewModel : ViewModel() {
     fun onPlayStop() {
         _playingState.update { state ->
             when (state) {
-                Canceled -> Starting(
+                Stopped -> Starting(
                     job = viewModelScope.launch {
                         play(
                             sourceUrl = _source.value.url,
                             onStartPlaying = { _playingState.update { it.onStartPlaying() } },
-                            onStopPlaying = { _playingState.update { onCancelPlaying() } },
+                            onStopPlaying = { _playingState.update { onStopPlaying() } },
                         )
                     },
                 )
 
-                is Playing, is Starting -> onCancelPlaying()
+                is Playing, is Starting -> onStopPlaying()
             }
         }
     }
 
-    private fun onCancelPlaying(): Canceled {
-        _playingState.value.onCancelPlaying()
-        return Canceled
+    private fun onStopPlaying(): Stopped {
+        _playingState.value.onStopPlaying()
+        return Stopped
     }
 }
