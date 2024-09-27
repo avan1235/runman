@@ -14,10 +14,6 @@ import compose.icons.feathericons.Square
 import `in`.procyk.runman.PlayingState.*
 import `in`.procyk.runman.radio.play
 import `in`.procyk.runman.theme.AppTheme
-import io.ktor.client.*
-import io.ktor.client.request.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -107,20 +103,20 @@ internal fun App() = AppTheme {
 
 internal sealed interface PlayingState {
     fun onStartPlaying(): PlayingState
-    fun cancel()
+    fun onCancelPlaying()
     class Starting(private val job: Job) : PlayingState {
         override fun onStartPlaying() = Playing(job)
-        override fun cancel() = job.cancel()
+        override fun onCancelPlaying() = job.cancel()
     }
 
     class Playing(private val job: Job) : PlayingState {
         override fun onStartPlaying() = Canceled
-        override fun cancel() = job.cancel()
+        override fun onCancelPlaying() = job.cancel()
     }
 
     data object Canceled : PlayingState {
         override fun onStartPlaying() = Canceled
-        override fun cancel() {}
+        override fun onCancelPlaying() {}
     }
 }
 
@@ -144,8 +140,6 @@ internal class RadioSource(
 }
 
 internal class MyViewModel : ViewModel() {
-    private val client = HttpClient()
-
     private val _source = MutableStateFlow(RadioSource.KNOWN.first())
     val source: StateFlow<RadioSource> = _source.asStateFlow()
 
@@ -166,27 +160,22 @@ internal class MyViewModel : ViewModel() {
         _playingState.update { state ->
             when (state) {
                 Canceled -> Starting(
-                    job = viewModelScope.launch(Dispatchers.Default) {
-                        val statement = client.prepareGet(_source.value.url)
-                        val result = statement.body<ByteReadChannel>()
-
-                        try {
-                            play(
-                                bytes = result,
-                                onStartPlaying = {
-                                    _playingState.update { it.onStartPlaying() }
-                                },
-                            )
-                        } finally {
-                            result.cancel()
-                        }
+                    job = viewModelScope.launch {
+                        play(
+                            sourceUrl = _source.value.url,
+                            onStartPlaying = { _playingState.update { it.onStartPlaying() } },
+                            onStopPlaying = { _playingState.update { onCancelPlaying() } },
+                        )
                     },
                 )
 
-                is Playing -> state.cancel().let { Canceled }
-                is Starting -> state.cancel().let { Canceled }
+                is Playing, is Starting -> onCancelPlaying()
             }
         }
+    }
 
+    private fun onCancelPlaying(): Canceled {
+        _playingState.value.onCancelPlaying()
+        return Canceled
     }
 }

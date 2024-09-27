@@ -1,5 +1,7 @@
 package `in`.procyk.runman.radio
 
-import io.ktor.utils.io.*
-
-internal expect suspend fun play(bytes: ByteReadChannel, onStartPlaying: () -> Unit)
+internal expect suspend fun play(
+    sourceUrl: String,
+    onStartPlaying: () -> Unit,
+    onStopPlaying: () -> Unit,
+)
