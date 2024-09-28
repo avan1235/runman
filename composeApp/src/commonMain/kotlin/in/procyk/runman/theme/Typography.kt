@@ -10,9 +10,9 @@ import org.jetbrains.compose.resources.Font
 import runman.composeapp.generated.resources.*
 import runman.composeapp.generated.resources.Res.font
 
-private val baseline = Typography()
+private val Baseline = Typography()
 
-internal val bodyFontFamily: FontFamily
+internal val BodyFontFamily: FontFamily
     @Composable
     get() = FontFamily(
         Font(resource = font.RobotoCondensed_Black, weight = FontWeight.Black, style = Normal),
@@ -35,26 +35,35 @@ internal val bodyFontFamily: FontFamily
         Font(resource = font.RobotoCondensed_ThinItalic, weight = FontWeight.Thin, style = Italic),
     )
 
-internal val displayFontFamily: FontFamily
+internal val DisplayFontFamily: FontFamily
     @Composable
-    get() = bodyFontFamily
+    get() = FontFamily(
+        Font(resource = font.PlaywriteAT_ExtraLight, weight = FontWeight.ExtraLight, style = Normal),
+        Font(resource = font.PlaywriteAT_ExtraLightItalic, weight = FontWeight.ExtraLight, style = Italic),
+        Font(resource = font.PlaywriteAT_Regular, weight = FontWeight.Normal, style = Normal),
+        Font(resource = font.PlaywriteAT_Italic, weight = FontWeight.Normal, style = Italic),
+        Font(resource = font.PlaywriteAT_Light, weight = FontWeight.Light, style = Normal),
+        Font(resource = font.PlaywriteAT_LightItalic, weight = FontWeight.Light, style = Italic),
+        Font(resource = font.PlaywriteAT_Thin, weight = FontWeight.Thin, style = Normal),
+        Font(resource = font.PlaywriteAT_ThinItalic, weight = FontWeight.Thin, style = Italic),
+    )
 
 internal val AppTypography: Typography
     @Composable
     get() = Typography(
-        displayLarge = baseline.displayLarge.copy(fontFamily = displayFontFamily),
-        displayMedium = baseline.displayMedium.copy(fontFamily = displayFontFamily),
-        displaySmall = baseline.displaySmall.copy(fontFamily = displayFontFamily),
-        headlineLarge = baseline.headlineLarge.copy(fontFamily = displayFontFamily),
-        headlineMedium = baseline.headlineMedium.copy(fontFamily = displayFontFamily),
-        headlineSmall = baseline.headlineSmall.copy(fontFamily = displayFontFamily),
-        titleLarge = baseline.titleLarge.copy(fontFamily = displayFontFamily),
-        titleMedium = baseline.titleMedium.copy(fontFamily = displayFontFamily),
-        titleSmall = baseline.titleSmall.copy(fontFamily = displayFontFamily),
-        bodyLarge = baseline.bodyLarge.copy(fontFamily = bodyFontFamily),
-        bodyMedium = baseline.bodyMedium.copy(fontFamily = bodyFontFamily),
-        bodySmall = baseline.bodySmall.copy(fontFamily = bodyFontFamily),
-        labelLarge = baseline.labelLarge.copy(fontFamily = bodyFontFamily),
-        labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily),
-        labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily),
+        displayLarge = Baseline.displayLarge.copy(fontFamily = DisplayFontFamily),
+        displayMedium = Baseline.displayMedium.copy(fontFamily = DisplayFontFamily),
+        displaySmall = Baseline.displaySmall.copy(fontFamily = DisplayFontFamily),
+        headlineLarge = Baseline.headlineLarge.copy(fontFamily = DisplayFontFamily),
+        headlineMedium = Baseline.headlineMedium.copy(fontFamily = DisplayFontFamily),
+        headlineSmall = Baseline.headlineSmall.copy(fontFamily = DisplayFontFamily),
+        titleLarge = Baseline.titleLarge.copy(fontFamily = DisplayFontFamily),
+        titleMedium = Baseline.titleMedium.copy(fontFamily = DisplayFontFamily),
+        titleSmall = Baseline.titleSmall.copy(fontFamily = DisplayFontFamily),
+        bodyLarge = Baseline.bodyLarge.copy(fontFamily = BodyFontFamily),
+        bodyMedium = Baseline.bodyMedium.copy(fontFamily = BodyFontFamily),
+        bodySmall = Baseline.bodySmall.copy(fontFamily = BodyFontFamily),
+        labelLarge = Baseline.labelLarge.copy(fontFamily = BodyFontFamily),
+        labelMedium = Baseline.labelMedium.copy(fontFamily = BodyFontFamily),
+        labelSmall = Baseline.labelSmall.copy(fontFamily = BodyFontFamily),
     )
