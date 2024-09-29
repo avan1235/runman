@@ -5,6 +5,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,6 +36,8 @@ internal fun App() = AppTheme {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        Text("Runman", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+
         val playingState by vm.playingState.collectAsState()
         val source by vm.source.collectAsState()
         var expanded by remember { mutableStateOf(false) }
