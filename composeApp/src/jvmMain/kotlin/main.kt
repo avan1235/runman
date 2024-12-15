@@ -1,23 +1,18 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Window
-import androidx.compose.ui.window.application
-import androidx.compose.ui.window.rememberWindowState
-import java.awt.Dimension
+import androidx.compose.ui.window.*
 import `in`.procyk.runman.App
+import `in`.procyk.runman.exported.KoinHelper
 
-fun main() = application {
-    Window(
-        title = "Runman",
-        state = rememberWindowState(width = 800.dp, height = 600.dp),
-        onCloseRequest = ::exitApplication,
-    ) {
-        window.minimumSize = Dimension(350, 600)
-        App()
+fun main() {
+    KoinHelper.startKoin()
+    application {
+        Window(
+            title = "Runman",
+            state = rememberWindowState(placement = WindowPlacement.Fullscreen),
+            onCloseRequest = ::exitApplication,
+            decoration = WindowDecoration.Undecorated(),
+            resizable = false,
+        ) {
+            App()
+        }
     }
 }
-
-@Preview
-@Composable
-fun AppPreview() { App() }

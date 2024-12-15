@@ -1,102 +1,174 @@
 package `in`.procyk.runman
 
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import runman.composeapp.generated.resources.*
+import coil3.compose.AsyncImage
+import compose.icons.FeatherIcons
+import compose.icons.feathericons.Play
+import compose.icons.feathericons.Square
+import `in`.procyk.runman.PlayingState.*
 import `in`.procyk.runman.theme.AppTheme
-import `in`.procyk.runman.theme.LocalThemeIsDark
-import io.ktor.client.*
-import io.ktor.client.request.*
-import kotlinx.coroutines.isActive
-import org.jetbrains.compose.resources.Font
-import org.jetbrains.compose.resources.stringResource
-import org.jetbrains.compose.resources.vectorResource
+import `in`.procyk.runman.vm.RadioViewModel
+import kotlinx.coroutines.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun App() = AppTheme {
-    Column(
+    val vm = remember { RadioViewModel() }
+
+    Box(
         modifier = Modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxSize(),
     ) {
-        Text(
-            text = stringResource(Res.string.cyclone),
-            fontFamily = FontFamily(Font(Res.font.IndieFlower_Regular)),
-            style = MaterialTheme.typography.displayLarge
+        val radioCoverUrl by vm.radioCoverUrl.collectAsState(null)
+
+        AsyncImage(
+            model = radioCoverUrl.also { println("radioCoverUrl = $radioCoverUrl") },
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    renderEffect = BlurEffect(radiusX = 20f, radiusY = 20f, edgeTreatment = TileMode.Mirror)
+                },
+            contentDescription = null,
         )
 
-        var isRotating by remember { mutableStateOf(false) }
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.safeDrawing)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
 
-        val rotate = remember { Animatable(0f) }
-        val target = 360f
-        if (isRotating) {
-            LaunchedEffect(Unit) {
-                while (isActive) {
-                    val remaining = (target - rotate.value) / target
-                    rotate.animateTo(target, animationSpec = tween((1_000 * remaining).toInt(), easing = LinearEasing))
-                    rotate.snapTo(0f)
+            Text(
+                text = "Runman",
+                style = MaterialTheme.typography.headlineLarge.copy(
+                    color = Color.White,
+                    shadow = Shadow(
+                        color = Color.Black,
+                        offset = Offset(2f, 2f),
+                        blurRadius = 2f,
+                    ),
+                ),
+                fontWeight = FontWeight.Bold,
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            AsyncImage(
+                model = radioCoverUrl,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.sizeIn(maxHeight = 256.dp, maxWidth = 256.dp),
+                contentDescription = null,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            val playingState by vm.playingState.collectAsState()
+            var expanded by remember { mutableStateOf(false) }
+            val radioName by vm.radioName.collectAsState(null)
+
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+                modifier = Modifier.widthIn(max = 600.dp),
+            ) {
+                TextField(
+                    value = radioName ?: "Loading radio name…",
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Source") },
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true)
+                        .fillMaxWidth(),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    vm.knownRadioSources.forEach { item ->
+                        val name by item.getName().collectAsState("Loading radio name…")
+                        DropdownMenuItem(
+                            text = { Text(name) },
+                            onClick = {
+                                vm.onSourceSelected(item)
+                                expanded = false
+                            },
+                        )
+                    }
                 }
             }
-        }
+            when (playingState) {
+                is Starting -> Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
 
-        Image(
-            modifier = Modifier
-                .size(250.dp)
-                .padding(16.dp)
-                .run { rotate(rotate.value) },
-            imageVector = vectorResource(Res.drawable.ic_cyclone),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-            contentDescription = null
-        )
+                is Playing, is Stopped -> ElevatedButton(
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .widthIn(min = 200.dp),
+                    onClick = vm::onPlayStop,
+                    content = {
+                        when (playingState) {
+                            is Playing -> {
+                                Icon(FeatherIcons.Square, contentDescription = "Stop")
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text("Stop")
+                            }
 
-        ElevatedButton(
-            modifier = Modifier
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-                .widthIn(min = 200.dp),
-            onClick = { isRotating = !isRotating },
-            content = {
-                Icon(vectorResource(Res.drawable.ic_rotate_right), contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(
-                    stringResource(if (isRotating) Res.string.stop else Res.string.run)
+                            is Starting, Stopped -> {
+                                Icon(FeatherIcons.Play, contentDescription = "Play")
+                                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                                Text("Play")
+                            }
+                        }
+                    },
                 )
             }
-        )
-
-        var isDark by LocalThemeIsDark.current
-        val icon = remember(isDark) {
-            if (isDark) Res.drawable.ic_light_mode
-            else Res.drawable.ic_dark_mode
-        }
-
-        ElevatedButton(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-            onClick = { isDark = !isDark },
-            content = {
-                Icon(vectorResource(icon), contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text(stringResource(Res.string.theme))
-            }
-        )
-
-        val uriHandler = LocalUriHandler.current
-        TextButton(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp).widthIn(min = 200.dp),
-            onClick = { uriHandler.openUri("https://github.com/terrakok") },
-        ) {
-            Text(stringResource(Res.string.open_github))
         }
     }
 }
+
+internal sealed class PlayingState {
+    abstract fun onStartPlaying(): PlayingState
+    abstract fun onStopPlaying()
+
+    class Starting(private val job: Job) : PlayingState() {
+        override fun onStartPlaying() = Playing(job)
+        override fun onStopPlaying() = job.cancel()
+    }
+
+    class Playing(private val job: Job) : PlayingState() {
+        override fun onStartPlaying() = Stopped
+        override fun onStopPlaying() = job.cancel()
+    }
+
+    data object Stopped : PlayingState() {
+        override fun onStartPlaying() = Stopped
+        override fun onStopPlaying() {}
+    }
+}
+
+internal val PlayingState.isPlaying: Boolean
+    get() = when (this) {
+        is Playing -> true
+        is Starting, Stopped -> false
+    }
